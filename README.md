@@ -1,14 +1,12 @@
-[![Build Status](https://travis-ci.org/p0bailey/docker-flask.svg?branch=master)](https://travis-ci.org/p0bailey/docker-flask)
+![image](https://cloud.githubusercontent.com/assets/2152766/8311624/68bd2ac6-19cf-11e5-9556-64cf57275753.png)
 
+The `be` farm.
 
-This image is a boilerplate for any Flask application,  pages are served by uwsgi and Nginx.
+A web application streaming [`be-presets`][1] for display in a browser.
 
-docker run -d p0bailey/docker-flask
+- [Visit][2]
 
-Source code: https://github.com/p0bailey/docker-flask
+[1]: https://github.com/mottosso/be-presets
+[2]: http://be.abstractfactory.io
 
-![Hello Flask][2]
-
-
-
-[2]: http://s14.postimg.org/mwmg7p0v5/hello_flask.png
+![image](https://cloud.githubusercontent.com/assets/2152766/8311591/1c93eab8-19cf-11e5-97c7-e09341dc7376.png)
