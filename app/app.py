@@ -69,9 +69,7 @@ def update():
                                    repo=repo,
                                    fname=thumbnail)
         else:
-            thumbnail = raw.format(user="mottosso",
-                                   repo="be-presets",
-                                   fname="default_thumbnail.png")
+            thumbnail = "static/img/default_thumbnail.png"
 
         stargazers_url = api.format(user=user, repo=repo, endpoint="stargazers")
         stargazers = len(get(stargazers_url))
@@ -115,8 +113,7 @@ class Presets(flask.ext.restful.Resource):
 
     def post(self):
         headers = flask.request.headers
-        if headers.get("X-Github-Event") in ("push", "ping"):
-            log.info("Got push event from GitHub.")
+        if headers.get("X-Github-Event") == "push":
             update()
 
 
