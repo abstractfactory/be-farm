@@ -29,39 +29,50 @@ os.environ["APP_ROOT_PATH"] = app.root_path
 def get(*args, **kwargs):
     token = os.environ.get("GITHUB_API_TOKEN")
     kwargs["headers"] = {"Authorization": "token %s" % token} if token else None
-    return requests.get(*args, **kwargs)
+    try:
+        return requests.get(*args, **kwargs).json()
+    except Exception as e:
+        log.error(str(e))
+        return {}
 
 
 def update():
-    readme = "https://github.com/{user}/{repo}"
-    github = "https://raw.githubusercontent.com/{user}/{repo}/master/{fname}"
-    github_api = "https://api.github.com/repos/{user}/{repo}/{endpoint}"
+    raw = "https://raw.githubusercontent.com/{user}/{repo}/master/{fname}"
+    api = "https://api.github.com/repos/{user}/{repo}/{endpoint}"
+    link = "https://github.com/{user}/{repo}"
 
-    endpoint = github.format(user="mottosso",
-                             repo="be-presets",
-                             fname="presets.json")
-    presets_json = get(endpoint).json()
+    endpoint = raw.format(user="mottosso",
+                          repo="be-presets",
+                          fname="presets.json")
+    presets_json = get(endpoint)
     presets = list()
-    for preset in presets_json["presets"]:
-        user, repo = preset["repository"].split("/", 1)
-        endpoint = github.format(user=user,
-                                 repo=repo,
-                                 fname="package.json")
+    for preset in presets_json.get("presets", []):
+        try:
+            user, repo = preset["repository"].split("/", 1)
+        except ValueError as e:
+            log.error("Incorrectly formatted repository "
+                      "name: %s" % preset["repository"])
+            log.error(str(e))
+            continue
 
-        package = get(endpoint).json()
+        endpoint = raw.format(user=user,
+                              repo=repo,
+                              fname="package.json")
+
+        package = get(endpoint)
 
         thumbnail = package.get("thumbnail")
         if thumbnail:
-            thumbnail = github.format(user=user,
-                                      repo=repo,
-                                      fname=thumbnail)
+            thumbnail = raw.format(user=user,
+                                   repo=repo,
+                                   fname=thumbnail)
         else:
-            thumbnail = github.format(user="mottosso",
-                                      repo="be-presets",
-                                      fname="default_thumbnail.png")
+            thumbnail = raw.format(user="mottosso",
+                                   repo="be-presets",
+                                   fname="default_thumbnail.png")
 
-        stargazers_url = github_api.format(user=user, repo=repo, endpoint="stargazers")
-        stargazers = len(get(stargazers_url).json())
+        stargazers_url = api.format(user=user, repo=repo, endpoint="stargazers")
+        stargazers = len(get(stargazers_url))
 
         title = package.get("title") or preset["name"].title()
         description = package.get("description")
@@ -76,7 +87,7 @@ def update():
             "title": title,
             "repository": preset["repository"],
             "likes": 10,
-            "link": package.get("link") or readme.format(user=user, repo=repo),
+            "link": package.get("link") or link.format(user=user, repo=repo),
             "description": description,
             "thumbnail": thumbnail,
             "likes": stargazers
