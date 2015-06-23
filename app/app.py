@@ -115,7 +115,7 @@ class Presets(flask.ext.restful.Resource):
 
     def post(self):
         headers = flask.request.headers
-        if headers.get("X-Github-Event") == "push":
+        if headers.get("X-Github-Event") in ("push", "ping"):
             log.info("Got push event from GitHub.")
             update()
 
