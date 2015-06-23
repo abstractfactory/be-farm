@@ -3,7 +3,7 @@ body {
   margin-left: auto;
   margin-right: auto;
   overflow-y: scroll;
-  font: 300 0.8em/1.28 "Helvetica Neue", "Helvetica", "Arial", "sans-serif"; }
+  font: 300 0.8em/1.28 "Open Sans", "Helvetica Neue", "Helvetica", "Arial", "sans-serif"; }
 
 .header {
   position: relative;
@@ -72,7 +72,7 @@ body {
             font-weight: bold;
             height: 10px; }
           .body .preset .content .top p.description {
-            color: #444;
+            color: #777;
             font-size: 1.45em; }
       .body .preset .content .bottom {
         width: 100%;
