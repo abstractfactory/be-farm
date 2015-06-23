@@ -24,7 +24,7 @@ self.app = flask.Flask(__name__)
 self.app.route("/", defaults={"p": ""})(routes.home.route)
 self.app.route("/<path:p>")(routes.home.route)  # All paths route to index.html
 
-os.environ["APP_ROOT_PATH"] = app.root_path
+os.environ["APP_ROOT_PATH"] = self.app.root_path
 
 def get(*args, **kwargs):
     token = os.environ.get("GITHUB_API_TOKEN")
@@ -37,6 +37,8 @@ def get(*args, **kwargs):
 
 
 def update():
+    log.info("Updating..")
+
     raw = "https://raw.githubusercontent.com/{user}/{repo}/master/{fname}"
     api = "https://api.github.com/repos/{user}/{repo}/{endpoint}"
     link = "https://github.com/{user}/{repo}"
@@ -74,7 +76,7 @@ def update():
         stargazers_url = api.format(user=user, repo=repo, endpoint="stargazers")
         stargazers = len(get(stargazers_url))
 
-        title = package.get("title") or preset["name"].title()
+        label = package.get("label") or preset["name"].title()
         description = package.get("description")
 
         if not description:
@@ -84,7 +86,7 @@ def update():
 
         presets.append({
             "name": preset["name"],
-            "title": title,
+            "label": label,
             "repository": preset["repository"],
             "likes": 10,
             "link": package.get("link") or link.format(user=user, repo=repo),
@@ -94,13 +96,12 @@ def update():
         })
 
     self.cache[:] = presets
+    log.info("Done")
 
 
 def sync():
     while True:
-        log.info("Syncing..")
         update()
-        log.info("Done")
         time.sleep(10 if os.environ.get("DEVELOP") else 60 * 30)
 
 worker = threading.Thread(target=sync)
@@ -112,8 +113,13 @@ class Presets(flask.ext.restful.Resource):
     def get(self):
         return cache
 
+    def post(self):
+        headers = flask.request.headers
+        if headers.get("X-Github-Event") == "push":
+            update()
 
-api = flask.ext.restful.Api(app)
+
+api = flask.ext.restful.Api(self.app)
 api.add_resource(Presets, "/presets")
 
 
@@ -128,4 +134,4 @@ def production(app):
 
 
 if __name__ == "__main__":
-    debug(app)
+    debug(self.app)
