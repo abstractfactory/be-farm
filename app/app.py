@@ -26,9 +26,15 @@ self.app.route("/<path:p>")(routes.home.route)  # All paths route to index.html
 
 os.environ["APP_ROOT_PATH"] = self.app.root_path
 
+
 def get(*args, **kwargs):
+    """Wrapper around requests.get with implicit authentication"""
     token = os.environ.get("GITHUB_API_TOKEN")
-    kwargs["headers"] = {"Authorization": "token %s" % token} if token else None
+    if token:
+        log.info("Using GitHub API Token")
+        kwargs["headers"] = {
+            "Authorization": "token %s" % token
+        }
     try:
         return requests.get(*args, **kwargs).json()
     except Exception as e:
@@ -37,6 +43,14 @@ def get(*args, **kwargs):
 
 
 def update():
+    """Update cache of project presets
+
+    Calling this will initiate a number of requests to GitHub and it's API
+    in order to update the in-memory cache of each publicly avaialble project
+    for be.
+
+    """
+
     log.info("Updating..")
 
     raw = "https://raw.githubusercontent.com/{user}/{repo}/master/{fname}"
@@ -71,7 +85,9 @@ def update():
         else:
             thumbnail = "static/img/default_thumbnail.png"
 
-        stargazers_url = api.format(user=user, repo=repo, endpoint="stargazers")
+        stargazers_url = api.format(user=user,
+                                    repo=repo,
+                                    endpoint="stargazers")
         stargazers = len(get(stargazers_url))
 
         label = package.get("label") or preset["name"].title()
@@ -87,7 +103,8 @@ def update():
             "label": label,
             "repository": preset["repository"],
             "likes": 10,
-            "link": package.get("link") or link.format(user=user, repo=repo),
+            "link": package.get("link") or link.format(
+                user=user, repo=repo),
             "description": description,
             "thumbnail": thumbnail,
             "likes": stargazers
@@ -108,8 +125,8 @@ worker.start()
 
 
 class Presets(flask.ext.restful.Resource):
-    def get(self):
-        return cache
+    def get(this):
+        return self.cache
 
     def post(self):
         headers = flask.request.headers
