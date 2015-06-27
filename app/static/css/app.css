@@ -6,9 +6,11 @@ body {
   font: 400 0.8em/1.28 "Open Sans", "Helvetica Neue", "Helvetica", "Arial", "sans-serif"; }
 
 .header {
+  opacity: 0;
   position: relative;
   width: 100%;
   height: 100px;
+  animation: fade 0.5s forwards;
   display: flex;
   justify-content: center;
   align-items: center; }
@@ -34,6 +36,19 @@ body {
     .header input:focus {
       border-bottom: 2px solid #51abf3; }
 
+@keyframes fade {
+  from {
+    opacity: 0; }
+  to {
+    opacity: 1; } }
+@keyframes slide {
+  from {
+    transform: translateY(20px); }
+  to {
+    transform: translateY(0); } }
+.animation {
+  animation: fade 0.5s forwards ease-out, slide 0.5s forwards ease-out; }
+
 .body {
   width: 100%;
   display: flex;
@@ -41,6 +56,7 @@ body {
   justify-content: center;
   padding: 10px 0 0 0; }
   .body .preset {
+    opacity: 0;
     width: 260px;
     height: 130px;
     margin: 10px;
@@ -119,6 +135,8 @@ footer {
   width: 100%;
   display: flex;
   padding-top: 60px;
+  opacity: 0;
+  animation: fade 0.5s 1s forwards ease-out;
   justify-content: flex-end;
   text-decoration: none; }
   footer a {

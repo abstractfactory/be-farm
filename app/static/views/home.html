@@ -12,7 +12,7 @@
   <div class="underline"></div>
 
   <div class="body">
-    <div class="preset" ng-repeat="p in ctrl.presets | filter:q as results">
+    <div class="preset" ng-repeat="p in ctrl.presets | filter:q as results" delay>
       <img class="banner" ng-src="{{ p.thumbnail }}" alt="">
       <div class="content">
         <div class="top">

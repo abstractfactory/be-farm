@@ -24,7 +24,17 @@
         $locationProvider.html5Mode(true);
     });
 
-    app.controller("homeController", function (Restangular) {
+    app.directive("delay", function($timeout) {
+        return {
+            link: function(scope, element) {
+                $timeout(function() {
+                    element.addClass('animation');
+                }, (scope.$index + 1) * 100);
+            }
+        }
+    });
+
+    app.controller("homeController", function ($document, $timeout, Restangular) {
         var self;
 
         self = this;
