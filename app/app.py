@@ -8,9 +8,9 @@ import threading
 # Dependencies
 import flask
 import flask.ext.restful
-import requests
 
 # Local
+import lib
 import routes.home
 
 logging.basicConfig(format="%(asctime)-15s %(message)s")
@@ -27,21 +27,6 @@ self.app.route("/<path:p>")(routes.home.route)  # All paths route to index.html
 os.environ["APP_ROOT_PATH"] = self.app.root_path
 
 
-def get(*args, **kwargs):
-    """Wrapper around requests.get with implicit authentication"""
-    token = os.environ.get("GITHUB_API_TOKEN")
-    if token:
-        log.info("Using GitHub API Token")
-        kwargs["headers"] = {
-            "Authorization": "token %s" % token
-        }
-    try:
-        return requests.get(*args, **kwargs).json()
-    except Exception as e:
-        log.error(str(e))
-        return {}
-
-
 def update():
     """Update cache of project presets
 
@@ -53,14 +38,14 @@ def update():
 
     log.info("Updating..")
 
-    raw = "https://raw.githubusercontent.com/{user}/{repo}/master/{fname}"
-    api = "https://api.github.com/repos/{user}/{repo}/{endpoint}"
-    link = "https://github.com/{user}/{repo}"
+    raw = "https://raw.githubusercontent.com/{repo}/master/{fname}"
+    api = "https://api.github.com/repos/{repo}/{endpoint}"
+    repo_link = "https://github.com/{repo}"
+    gist_link = "https://gist.github.com/{repo}"
 
-    endpoint = raw.format(user="mottosso",
-                          repo="be-presets",
+    endpoint = raw.format(repo="mottosso/be-presets",
                           fname="presets.json")
-    presets_json = get(endpoint)
+    presets_json = lib.get(endpoint).json()
     presets = list()
     for preset in presets_json.get("presets", []):
         try:
@@ -71,26 +56,27 @@ def update():
             log.error(str(e))
             continue
 
-        endpoint = raw.format(user=user,
-                              repo=repo,
-                              fname="package.json")
+        repo = preset["repository"]
+        package, source = lib.package(repo)
 
-        package = get(endpoint)
+        if not package:
+            log.error("package.json not found in %s" % repo)
+            continue
 
         thumbnail = package.get("thumbnail")
         if thumbnail:
-            thumbnail = raw.format(user=user,
-                                   repo=repo,
+            thumbnail = raw.format(repo=repo,
                                    fname=thumbnail)
         else:
             thumbnail = "static/img/default_thumbnail.png"
+        print thumbnail
 
-        stargazers_url = api.format(user=user,
-                                    repo=repo,
+        stargazers_url = api.format(repo=repo,
                                     endpoint="stargazers")
-        stargazers = len(get(stargazers_url))
+        stargazers = len(lib.get(stargazers_url).json())
 
-        label = package.get("label") or preset["name"].title()
+        label = (package.get("label") or
+                 preset["name"].replace("-", " ").title())
         description = package.get("description")
 
         if not description:
@@ -98,13 +84,15 @@ def update():
         elif len(description) > 70:
             description = description[:67] + "..."
 
+        link = gist_link if source == "gist" else repo_link
+        link = package.get("link") or link.format(repo=repo)
+
         presets.append({
             "name": preset["name"],
             "label": label,
             "repository": preset["repository"],
             "likes": 10,
-            "link": package.get("link") or link.format(
-                user=user, repo=repo),
+            "link": link,
             "description": description,
             "thumbnail": thumbnail,
             "likes": stargazers

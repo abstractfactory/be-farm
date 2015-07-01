@@ -53,7 +53,7 @@ body {
   width: 100%;
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 10px 0 0 0; }
   .body .preset {
     opacity: 0;
